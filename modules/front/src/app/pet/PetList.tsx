@@ -11,7 +11,7 @@ import {
   MainStoreInjected,
   EntityPermAccessControl
 } from "@cuba-platform/react-core";
-import { DataTable, Spinner } from "@cuba-platform/react-ui";
+import {ColumnDefinition, DataTable, Spinner} from "@cuba-platform/react-ui";
 
 import { Pet } from "../../cuba/entities/petclinic_Pet";
 import { SerializedEntity, getStringId } from "@cuba-platform/rest";
@@ -33,7 +33,18 @@ class PetListComponent extends React.Component<
   });
   @observable selectedRowKey: string | undefined;
 
-  fields = ["identificationNumber", "birthDate", "name", "type", "owner"];
+  ownerColumnDefinition: ColumnDefinition<Pet> = {
+    field: "owner",
+    columnProps: {}
+  }
+
+  fields: (string | ColumnDefinition<Pet>)[] = [
+    "identificationNumber",
+    "birthDate",
+    "name",
+    "type",
+    this.ownerColumnDefinition
+  ];
 
   showDeletionDialog = (e: SerializedEntity<Pet>) => {
     Modal.confirm({
@@ -110,7 +121,7 @@ class PetListComponent extends React.Component<
     return (
       <DataTable
         dataCollection={this.dataCollection}
-        fields={this.fields}
+        columnDefinitions={this.fields}
         onRowSelectionChange={this.handleRowSelectionChange}
         hideSelectionColumn={true}
         buttons={buttons}
