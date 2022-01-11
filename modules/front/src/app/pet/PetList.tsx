@@ -9,18 +9,65 @@ import {
   collection,
   injectMainStore,
   MainStoreInjected,
-  EntityPermAccessControl
+  EntityPermAccessControl, DataCollectionStore
 } from "@cuba-platform/react-core";
 import {ColumnDefinition, DataTable, Spinner} from "@cuba-platform/react-ui";
 
 import { Pet } from "../../cuba/entities/petclinic_Pet";
-import { SerializedEntity, getStringId } from "@cuba-platform/rest";
+import {SerializedEntity, getStringId, Condition} from "@cuba-platform/rest";
 import { PetManagement } from "./PetManagement";
 import {
   FormattedMessage,
   injectIntl,
   WrappedComponentProps
 } from "react-intl";
+import { Input, Space } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import {FilterDropdownProps} from "antd/es/table/interface";
+import {Owner} from "../../cuba/entities/petclinic_Owner";
+
+function OwnerFilterDropdown(props: FilterDropdownProps & {dataCollection: DataCollectionStore<Pet>}) {
+
+  const ownerDC = collection<Owner>(Owner.NAME, {
+    view: "_minimal"
+  });
+
+  const {setSelectedKeys, selectedKeys, dataCollection} = props;
+
+  const handleSearch = () => {
+    const ownerIds: string[] = ownerDC.items
+      .filter(owner => owner._instanceName !== undefined
+        && owner._instanceName.toLowerCase().indexOf((selectedKeys[0] as string).toLowerCase()) >= 0)
+      .filter(owner => owner.id !== undefined)
+      .map(owner => owner.id) as string[];
+
+    const condition: Condition = {property: 'owner', operator: 'in', value: ownerIds}
+    dataCollection.filter = {conditions: [condition]};
+    return dataCollection.load();
+  }
+
+  return (
+    <div style={{ padding: 8 }}>
+      <Input
+        value={selectedKeys[0]}
+        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+        onPressEnter={() => handleSearch()}
+        style={{ marginBottom: 8, display: 'block' }}
+      />
+      <Space>
+        <Button
+          type="primary"
+          onClick={() => handleSearch()}
+          icon={<SearchOutlined />}
+          size="small"
+          style={{ width: 90 }}
+        >
+          Search
+        </Button>
+      </Space>
+    </div>
+  )
+}
 
 @injectMainStore
 @observer
@@ -35,7 +82,10 @@ class PetListComponent extends React.Component<
 
   ownerColumnDefinition: ColumnDefinition<Pet> = {
     field: "owner",
-    columnProps: {}
+    columnProps: {
+      filterDropdown: filterDropdownProps =>
+        OwnerFilterDropdown({... filterDropdownProps, dataCollection: this.dataCollection})
+    }
   }
 
   fields: (string | ColumnDefinition<Pet>)[] = [
