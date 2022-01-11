@@ -1,3 +1,4 @@
+import { PetManagement } from "./app/pet/PetManagement";
 import { getMenuItems } from "@cuba-platform/react-core";
 
 export const menuItems = getMenuItems();
@@ -20,3 +21,10 @@ const userSettingsSubMenu = {
 // Add sub menu item to menu config
 menuItems.push(userSettingsSubMenu);
 */
+
+menuItems.push({
+  pathPattern: "/petManagement/:entityId?",
+  menuLink: "/petManagement",
+  component: PetManagement,
+  caption: "PetManagement"
+});
